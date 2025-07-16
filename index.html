@@ -326,7 +326,18 @@
       color: #ffdddd;
     }
 
-        
+    .flatpickr-calendar {
+      font-family: sans-serif;
+      z-index: 9999 !important; /* 表示されない時に必要なことがある */
+    }
+
+    input#whenInput {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      -webkit-text-fill-color: white; /* Safari用 */
+      caret-color: white;
+    }
+
 
     @media (max-width: 600px) {
       .container {
@@ -394,8 +405,9 @@
       // Flatpickrで日付入力をカレンダー化
       flatpickr("#whenInput", {
         dateFormat: "Y/m/d",
-        locale: "ja"
+        locale: flatpickr.l10ns.ja // ← ここを修正！
       });
+
 
       let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
