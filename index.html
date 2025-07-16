@@ -229,6 +229,77 @@
       transform: scale(1.02);
     }
 
+    #cancelEdit {
+      display: none;
+      text-align: center;
+      font-size: 0.9rem;
+      color: white;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: -4px;
+      transition: opacity 0.2s;
+    }
+
+    #cancelEdit:hover {
+      opacity: 0.8;
+    }
+    
+    .editing-mode .form-wrapper {
+      background: #ce63a22e !important;
+
+    }
+    
+    #editNotice {
+      display: none;
+      text-align: center;
+      margin-bottom: 10px;
+      
+      color: #ffd3fe; /* ← 色もここで調整 */
+    }
+
+    body.dark #mapContainer {
+      background: rgba(0,0,0,0.3);
+    }
+
+    .map-link {
+      color: rgb(255, 253, 254);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    #mapContainer {
+      max-width: 90%;
+      margin: 20px auto 0 auto;
+    }
+
+    .map-link:hover img {
+      transform: scale(1.2);
+      transition: transform 0.2s ease;
+      opacity: 1;
+    }
+
+    #hideMapBtn {
+      display: block;
+      margin-top: 8px;
+      margin-left: auto; /* ← 右寄せ */
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #ffffff;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      opacity: 0.9;
+    }
+
+    #hideMapBtn:hover {
+      opacity: 1;
+      color: #ffdddd;
+    }
+
+
+        
+
     @media (max-width: 600px) {
       .container {
         margin: 20px auto;
@@ -238,12 +309,15 @@
 </head>
 <body>
   <div class="container">
-    <div class="form-wrapper">
+    <div class="form-wrapper" id="formWrapper">
       <div class="centered-header">
         <h1>LJK TODO</h1>
         <button class="toggle-theme" id="themeToggle">🌙</button>
         <div class="countdown" id="countdown">LJK終了まであと ? 日</div>
       </div>
+
+      <div id="editNotice">🔧 編集モード</div>
+
 
       <div class="todo-form">
         <input type="text" id="taskInput" placeholder="todo" />
@@ -251,6 +325,10 @@
         <input type="text" id="whoInput" placeholder="誰と" />
         <input type="text" id="whereInput" placeholder="場所" />
         <button id="addTask">追加</button>
+        <span id="cancelEdit" style="display: none; text-align: center; font-size: 0.9rem; color: white; cursor: pointer; text-decoration: underline;">
+          キャンセル
+        </span>
+
       </div>
     </div>
 
@@ -263,6 +341,13 @@
     </div>
   </div>
 
+    <!-- 🔽 タスク一覧のすぐ下に追加 -->
+  <div id="mapContainer" style="margin-top: 20px; display: none; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 18px; backdrop-filter: blur(6px);">
+    <iframe id="mapFrame" width="100%" height="300" style="border:0; border-radius: 16px;" allowfullscreen="" loading="lazy"></iframe>
+    <button id="hideMapBtn" onclick="hideMap()" >マップを閉じる</button>
+  </div>
+
+
   <script>
     const taskInput = document.getElementById("taskInput");
     const whenInput = document.getElementById("whenInput");
@@ -272,6 +357,10 @@
     const itemsLeft = document.getElementById("itemsLeft");
     const clearCompleted = document.getElementById("clearCompleted");
     const themeToggle = document.getElementById("themeToggle");
+    const addTaskBtn = document.getElementById("addTask");
+    const formWrapper = document.getElementById("formWrapper");
+    const editNotice = document.getElementById("editNotice");
+    const cancelEdit = document.getElementById("cancelEdit");
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
@@ -315,8 +404,14 @@
           (isSoon ? " soon" : "");
 
         const whereHTML = task.where
-          ? `<br />場所: <a href="https://www.google.com/maps/search/${encodeURIComponent(task.where)}" target="_blank" style="color: #fff; text-decoration: underline;">${task.where}</a>`
-          : "";
+        ? `<br />場所: <span class="map-link" onclick="showMap('${task.where}')">
+            ${task.where}
+            <img src="click.svg" alt="地図を開く" style="width: 20px; height: 20px; margin-left: 4px; vertical-align: middle; opacity: 0.9;" />
+          </span>`
+        : "";
+
+
+
 
         li.innerHTML = `
           <div class="task-text">
@@ -327,6 +422,9 @@
           </div>
           <div class="task-actions">
             <input type="checkbox" ${task.completed ? "checked" : ""} onchange="toggleTask(${index})" />
+            <button onclick="editTask(${index})" class="delete-btn">
+              <img src="edit.svg" alt="編集" />
+            </button>
             <button onclick="deleteTask(${index})" class="delete-btn">
               <img src="icon.svg" alt="削除" />
             </button>
@@ -340,20 +438,79 @@
       saveTasks();
     }
 
+    function showMap(location) {
+      const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(location)}&output=embed`;
+      const mapFrame = document.getElementById("mapFrame");
+      const mapContainer = document.getElementById("mapContainer");
+      document.getElementById("mapFrame").src = mapUrl;
+      document.getElementById("mapContainer").style.display = "block";
+      mapContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function hideMap() {
+      document.getElementById("mapFrame").src = "";
+      document.getElementById("mapContainer").style.display = "none";
+    }
+
     function addTask() {
+      document.body.classList.remove("editing-mode");
       const text = taskInput.value.trim();
       const when = whenInput.value;
       const who = whoInput.value.trim();
       const where = whereInput.value.trim();
+
       if (!text) return;
 
-      tasks.push({ text, when, who, where, completed: false });
+      const editingIndex = taskInput.dataset.editing;
+      if (editingIndex !== undefined && editingIndex !== "") {
+        tasks[editingIndex] = { ...tasks[editingIndex], text, when, who, where };
+        taskInput.dataset.editing = "";
+        addTaskBtn.textContent = "追加";
+        addTaskBtn.classList.remove("editing");
+        formWrapper.classList.remove("editing");
+        editNotice.style.display = "none";
+        cancelEdit.style.display = "none";
+      } else {
+        tasks.push({ text, when, who, where, completed: false });
+      }
+
       taskInput.value = "";
       whenInput.value = "";
       whoInput.value = "";
       whereInput.value = "";
+
       renderTasks();
     }
+
+    function editTask(index) {
+      const task = tasks[index];
+      taskInput.value = task.text;
+      whenInput.value = task.when;
+      whoInput.value = task.who;
+      whereInput.value = task.where;
+
+      taskInput.dataset.editing = index;
+      addTaskBtn.textContent = "更新";
+      addTaskBtn.classList.add("editing");
+      formWrapper.classList.add("editing");
+      editNotice.style.display = "block";
+      cancelEdit.style.display = "inline-block";
+      document.body.classList.add("editing-mode");
+    }
+
+    cancelEdit.addEventListener("click", () => {
+      document.body.classList.remove("editing-mode"); 
+      taskInput.value = "";
+      whenInput.value = "";
+      whoInput.value = "";
+      whereInput.value = "";
+      taskInput.dataset.editing = "";
+      addTaskBtn.textContent = "追加";
+      addTaskBtn.classList.remove("editing");
+      formWrapper.classList.remove("editing");
+      editNotice.style.display = "none";
+      cancelEdit.style.display = "none";
+    });
 
     function toggleTask(index) {
       tasks[index].completed = !tasks[index].completed;
@@ -370,7 +527,7 @@
       renderTasks();
     });
 
-    document.getElementById("addTask").addEventListener("click", addTask);
+    addTaskBtn.addEventListener("click", addTask);
 
     function updateCountdown() {
       const countdown = document.getElementById("countdown");
