@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LJK ToDo</title>
   <link href="https://fonts.googleapis.com/css2?family=Jockey+One&display=swap" rel="stylesheet" />
+    <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
   <style>
 
     input[type="date"] {
@@ -318,7 +323,6 @@
       color: #ffdddd;
     }
 
-
         
 
     @media (max-width: 600px) {
@@ -342,7 +346,7 @@
 
       <div class="todo-form">
         <input type="text" id="taskInput" placeholder="todo" />
-        <input type="date" id="whenInput" />
+        <input type="text" id="whenInput" placeholder="日付を選択" />
         <input type="text" id="whoInput" placeholder="誰と" />
         <input type="text" id="whereInput" placeholder="場所" />
         <button id="addTask">追加</button>
@@ -382,6 +386,13 @@
     const formWrapper = document.getElementById("formWrapper");
     const editNotice = document.getElementById("editNotice");
     const cancelEdit = document.getElementById("cancelEdit");
+
+    // Flatpickrで日付入力をカレンダー化
+  flatpickr("#whenInput", {
+    dateFormat: "Y/m/d",
+    locale: "ja" // 日本語化したい場合はflatpickrの日本語ロケールも追加できます
+  });
+
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
