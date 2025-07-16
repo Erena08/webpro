@@ -6,6 +6,27 @@
   <title>LJK ToDo</title>
   <link href="https://fonts.googleapis.com/css2?family=Jockey+One&display=swap" rel="stylesheet" />
   <style>
+
+    input[type="date"] {
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-text-fill-color: white;
+      caret-color: white;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 0.8;
+    }
+
     :root {
       --bg-gradient: linear-gradient(135deg, #aab9ff, #cbb8f2);
       --card-bg: rgba(255, 255, 255, 0.1);
@@ -277,6 +298,7 @@
       transition: transform 0.2s ease;
       opacity: 1;
     }
+
 
     #hideMapBtn {
       display: block;
