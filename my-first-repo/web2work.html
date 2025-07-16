@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LJK ToDo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jockey+One&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #aab9ff, #cbb8f2);
+      --card-bg: rgba(255, 255, 255, 0.1);
+      --text-color: #ffffff;
+      --btn-bg: linear-gradient(135deg, #4e80b6, #735fc3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Jockey One', sans-serif;
+      background: url("ljk.jpg") center/cover no-repeat fixed;
+      color: var(--text-color);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 132, 226, 0.192);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    body.dark::before {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .toggle-theme {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      z-index: 10;
+      transform: translateX(10%);
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 60px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .form-wrapper, .task-list-wrapper {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+      width: 100%;
+    }
+
+    .centered-header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .centered-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.4em;
+    }
+
+    .countdown {
+      font-size: 1rem;
+    }
+
+    .todo-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .todo-form input {
+      padding: 12px 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-color);
+      transition: 0.2s;
+    }
+
+    .todo-form input::placeholder {
+      color: #eee;
+    }
+
+    .todo-form input:focus {
+      outline: none;
+      box-shadow: 0 0 5px #ffffff88;
+      border: 1px solid #ffffff88;
+    }
+
+    input[type="date"] {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      -webkit-text-fill-color: white;
+      caret-color: white;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 0.8;
+    }
+
+    .todo-form button {
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 14px;
+      background: var(--btn-bg);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .todo-form button:hover {
+      transform: scale(1.02);
+      opacity: 0.95;
+    }
+
+    .todo-form button:active {
+      transform: scale(0.98);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    .task-item {
+      background: var(--btn-bg);
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .task-item.completed {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
+    .task-item.soon {
+      background: linear-gradient(135deg, #d696d6, #c77ae3);
+      box-shadow: 0 0 8px rgba(255,192,203,0.4);
+    }
+
+    .task-text {
+      flex-grow: 1;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    .delete-btn img {
+      width: 22px;
+      height: 22px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffb6c1, #e09eff);
+      color: #fff;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      margin-top: 4px;
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer button {
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      background: var(--btn-bg);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .footer button:hover {
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-wrapper">
+      <div class="centered-header">
+        <h1>LJK TODO</h1>
+        <button class="toggle-theme" id="themeToggle">🌙</button>
+        <div class="countdown" id="countdown">LJK終了まであと ? 日</div>
+      </div>
+
+      <div class="todo-form">
+        <input type="text" id="taskInput" placeholder="todo" />
+        <input type="date" id="whenInput" />
+        <input type="text" id="whoInput" placeholder="w/" />
+        <input type="text" id="whereInput" placeholder="場所" />
+        <button id="addTask">追加</button>
+      </div>
+    </div>
+
+    <div class="task-list-wrapper">
+      <ul id="taskList"></ul>
+      <div class="footer">
+        <span id="itemsLeft">0 items left</span>
+        <button id="clearCompleted">完了タスクを削除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById("taskInput");
+    const whenInput = document.getElementById("whenInput");
+    const whoInput = document.getElementById("whoInput");
+    const whereInput = document.getElementById("whereInput");
+    const taskList = document.getElementById("taskList");
+    const itemsLeft = document.getElementById("itemsLeft");
+    const clearCompleted = document.getElementById("clearCompleted");
+    const themeToggle = document.getElementById("themeToggle");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark");
+      themeToggle.textContent = "☀️";
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.body.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeToggle.textContent = isDark ? "☀️" : "🌙";
+    });
+
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+      tasks.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        if (!a.when) return 1;
+        if (!b.when) return -1;
+        return new Date(a.when) - new Date(b.when);
+      });
+
+      let activeCount = 0;
+      const today = new Date();
+      const oneWeekLater = new Date();
+      oneWeekLater.setDate(today.getDate() + 7);
+
+      tasks.forEach((task, index) => {
+        const taskDate = new Date(task.when);
+        const isSoon = task.when && taskDate <= oneWeekLater && taskDate >= today;
+
+        const li = document.createElement("li");
+        li.className = "task-item" +
+          (task.completed ? " completed" : "") +
+          (isSoon ? " soon" : "");
+
+        const whereHTML = task.where
+          ? `<br />場所: <a href="https://www.google.com/maps/search/${encodeURIComponent(task.where)}" target="_blank" style="color: #fff; text-decoration: underline;">${task.where}</a>`
+          : "";
+
+        li.innerHTML = `
+          <div class="task-text">
+            <strong>${task.text}</strong><br />
+            日時: ${task.when || "-"} / 一緒に: ${task.who || "-"}
+            ${whereHTML}
+            ${isSoon ? `<br /><span class="badge">⏰ 1週間以内</span>` : ""}
+          </div>
+          <div class="task-actions">
+            <input type="checkbox" ${task.completed ? "checked" : ""} onchange="toggleTask(${index})" />
+            <button onclick="deleteTask(${index})" class="delete-btn">
+              <img src="icon.svg" alt="削除" />
+            </button>
+          </div>
+        `;
+        taskList.appendChild(li);
+        if (!task.completed) activeCount++;
+      });
+
+      itemsLeft.textContent = `${activeCount} items left`;
+      saveTasks();
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      const when = whenInput.value;
+      const who = whoInput.value.trim();
+      const where = whereInput.value.trim();
+      if (!text) return;
+
+      tasks.push({ text, when, who, where, completed: false });
+      taskInput.value = "";
+      whenInput.value = "";
+      whoInput.value = "";
+      whereInput.value = "";
+      renderTasks();
+    }
+
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      renderTasks();
+    }
+
+    clearCompleted.addEventListener("click", () => {
+      tasks = tasks.filter(task => !task.completed);
+      renderTasks();
+    });
+
+    document.getElementById("addTask").addEventListener("click", addTask);
+
+    function updateCountdown() {
+      const countdown = document.getElementById("countdown");
+      const today = new Date();
+      const endDate = new Date("2026-02-13");
+      const diff = endDate - today;
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      countdown.textContent = `LJK終了まであと ${days} 日`;
+    }
+
+    updateCountdown();
+    renderTasks();
+  </script>
+</body>
+</html>
